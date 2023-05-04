@@ -1,41 +1,63 @@
-import React, { useState } from 'react';
-import { AnswerButton } from './index';
+import React from 'react';
+import { AnswerButton } from './';
 import { decodeHTML, randomizeArray } from '../lib';
 
-const Question = ({ question }) => {
-  const { category, question: questionText, correct_answer, incorrect_answers } = question;
+class Question extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      guessed: false,
+      guess: '',
+    };
 
-  const answers = randomizeArray([...incorrect_answers, correct_answer]);
+    this.answers = randomizeArray([
+      ...props.question.incorrect_answers,
+      props.question.correct_answer,
+    ]);
+  }
 
-  const [guessed, setGuessed] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-
-  const handleGuess = answer => {
-    setIsCorrect(answer === correct_answer);
-    setGuessed(true);
+  handleGuess = (answer) => {
+    this.setState({ guessed: true, guess: answer });
   };
 
-  return (
-    <div className='card p-2 mb-4'>
-      <h3 className='fw-lighter fs-5 mb-4'>{category}</h3>
-      <h4 className='fw-light fs-5 mb-4'>{decodeHTML(questionText)}</h4>
-      <div>
-        {answers.map((answer, index) => (
-          <AnswerButton
-            key={index}
-            answer={answer}
-            handleGuess={handleGuess}
-            disabled={guessed}
-          />
-        ))}
-      </div>
-      {guessed && (
-        <div className={`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`}>
-          {isCorrect ? 'Correct!' : `Incorrect! The correct answer is ${correct_answer}`}
-        </div>
-      )}
-    </div>
-  );
-};
+  render() {
+    const { guessed, guess } = this.state;
+    const { correct_answer } = this.props.question;
+    const isCorrect = guessed && guess === correct_answer;
 
-export default Question;
+    return (
+      <div className='card p-2 mb-4'>
+        <h3 className='fw-lighter fs-5 mb-4'>{this.props.question.category}</h3>
+        <h4 className='fw-light fs-5 mb-4'>
+          {decodeHTML(this.props.question.question)}
+        </h4>
+
+        <div>
+          {this.answers.map((answer) => (
+            <AnswerButton
+              key={answer}
+              answer={answer}
+              handleGuess={this.handleGuess}
+              guessed={guessed}
+              guess={guess}
+            />
+          ))}
+        </div>
+
+        {guessed && (
+          <div className='mt-3'>
+            {isCorrect ? (
+              <p className='text-success'>Correct!</p>
+            ) : (
+              <p className='text-danger'>
+                Incorrect! The correct answer is {decodeHTML(correct_answer)}.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
+export { Question };
